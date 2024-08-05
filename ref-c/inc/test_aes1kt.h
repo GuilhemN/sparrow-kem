@@ -1,5 +1,5 @@
 //  test_aes1kt.h
-//  Copyright (c) 2023 Raccoon Signature Team. See LICENSE.
+//  Copyright (c) 2024 Sparrow KEM Team. See LICENSE.
 
 //  === AES 128/192/256 block encryption for NIST test vector generation.
 

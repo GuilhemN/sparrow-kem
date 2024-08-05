@@ -1,5 +1,5 @@
 //  mont64.h
-//  Copyright (c) 2023 Raccoon Signature Team. See LICENSE.
+//  Copyright (c) 2024 Sparrow KEM Team. See LICENSE.
 
 //  === Portable 64-bit Montgomery arithmetic
 
@@ -7,16 +7,18 @@
 #define _MONT64_H_
 
 #include "plat_local.h"
-#include "racc_param.h"
+#include "sparrow_param.h"
 
-#if (RACC_N != 512 || RACC_Q != 549824583172097l)
+// file generated with scripts/gen_ring.py
+
+#if (SPARROW_N != 128 || SPARROW_Q != 260609l)
 #error "Unrecognized polynomial parameters N, Q"
 #endif
 
 /*
-    n   = 512
-    q1  = 2^24-2^18+1
-    q2  = 2^25-2^18+1
+    n   = 128
+    q1  = 260609
+    q2  = 1
     q   = q1*q2
     r   = 2^64 % q
     rr  = r^2 % q
@@ -25,10 +27,12 @@
 */
 
 //  Montgomery constants. These depend on Q and N
-#define MONT_R 129308285697266L
-#define MONT_RR 506614974174448L
-#define MONT_NI 293083792181611L
-#define MONT_QI 2231854466648768511L
+#define MONT_R 125151L
+#define MONT_RR 171901L
+#define MONT_NI 7451L
+#define MONT_QI 2426873466807384575L
+
+// end generated
 
 //  Addition and subtraction
 
@@ -87,15 +91,15 @@ static inline int64_t mont64_redc(__int128 x)
     XASSUME(x < (((__int128)1) << 111));
 
     r = x * MONT_QI;
-    r = (x + ((__int128)r) * ((__int128)RACC_Q)) >> 64;
+    r = (x + ((__int128)r) * ((__int128)SPARROW_Q)) >> 64;
 
     //  prove that only one coditional addition is required
-    XASSERT(r >= -RACC_Q && r < RACC_Q);
+    XASSERT(r >= -SPARROW_Q && r < SPARROW_Q);
 
 #ifdef XDEBUG
     //  this modular reduction correctness proof is too slow for SAT
     XASSERT(((((__int128)x) - (((__int128)r) << 64)) %
-            ((__int128_t)RACC_Q)) == 0);
+            ((__int128_t)SPARROW_Q)) == 0);
 #endif
     return r;
 }

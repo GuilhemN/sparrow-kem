@@ -1,5 +1,5 @@
 //  polyr.h
-//  Copyright (c) 2023 Raccoon Signature Team. See LICENSE.
+//  Copyright (c) 2024 Sparrow KEM Team. See LICENSE.
 
 //  === Polynomial arithmetic related to the ring Zq[x]/(x^n+1).
 

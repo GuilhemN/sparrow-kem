@@ -1,5 +1,5 @@
 //  test_aes1kt.c
-//  Copyright (c) 2023 Raccoon Signature Team. See LICENSE.
+//  Copyright (c) 2024 Sparrow KEM Team. See LICENSE.
 
 //  === Simple AES implementation for test vector generation.
 //  NOTE THAT THIS IS NOT CONSTANT TIME AND SHOULD NOT BE USED FOR PRODUCTION

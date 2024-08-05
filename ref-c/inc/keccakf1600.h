@@ -1,5 +1,5 @@
 //  keccakf1600.h
-//  Copyright (c) 2023 Raccoon Signature Team. See LICENSE.
+//  Copyright (c) 2024 Sparrow KEM Team. See LICENSE.
 
 //  === Raw Keccak f-1600 interface.
 

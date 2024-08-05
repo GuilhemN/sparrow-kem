@@ -1,5 +1,5 @@
 //  test_main.c
-//  Copyright (c) 2023 Raccoon Signature Team. See LICENSE.
+//  Copyright (c) 2024 Sparrow KEM Team. See LICENSE.
 
 //  === private tests and benchmarks
 
@@ -11,13 +11,14 @@
 #include <string.h>
 
 #include "plat_local.h"
-#include "racc_core.h"
+#include "sparrow_core.h"
 #include "nist_random.h"
-#include "mask_random.h"
-#include "racc_serial.h"
+#include "sparrow_serial.h"
 #include "mont64.h"
 #include "polyr.h"
 #include "sha3_t.h"
+#include "gauss_sample.h"
+#include "sparrow_rec.h"
 
 #include "api.h"
 
@@ -62,30 +63,19 @@ int main()
 {
     size_t i;
 
-    //  message to be signed (used in checksums)
-    uint8_t msg[MAX_MSG] = "abc";
-    size_t mlen = 3;
-
     //  timing
     size_t iter = 100;
     double ts, to;
     uint64_t cc;
 
-    int fail = 0;
-
     //  buffers for serialized
-    uint8_t pk[CRYPTO_PUBLICKEYBYTES] = {0};
-    uint8_t sk[CRYPTO_SECRETKEYBYTES] = {0};
-    uint8_t sm[CRYPTO_BYTES + MAX_MSG] = {0};
-    uint8_t m2[MAX_MSG] = {0};
-    unsigned long long smlen = 0;
-    unsigned long long mlen2 = 0;
-
-    //  masking random
-    fail += mask_random_selftest();
-    if (fail > 0) {
-        printf("mask_random_selftest() fail= %d\n", fail);
-    }
+    uint8_t K[CRYPTO_SHAREDKEY] = {0};
+    uint8_t K_[CRYPTO_SHAREDKEY] = {0};
+    uint8_t ct[CRYPTO_BYTES] = {0};
+    uint8_t pkA[CRYPTO_PUBLICKEYBYTES] = {0};
+    uint8_t skA[CRYPTO_SECRETKEYBYTES] = {0};
+    uint8_t pkB[CRYPTO_PUBLICKEYBYTES] = {0};
+    uint8_t skB[CRYPTO_SECRETKEYBYTES] = {0};
 
     //  initialize nist pseudo random
     uint8_t seed[48];
@@ -99,27 +89,42 @@ int main()
     printf("CRYPTO_PUBLICKEYBYTES\t= %d\n", CRYPTO_PUBLICKEYBYTES);
     printf("CRYPTO_SECRETKEYBYTES\t= %d\n", CRYPTO_SECRETKEYBYTES);
     printf("CRYPTO_BYTES\t\t= %d\n", CRYPTO_BYTES);
+    printf("CRYPTO_SHAREDKEY\t\t= %d\n", CRYPTO_SHAREDKEY);
 
     //  === keygen ===
-    crypto_sign_keypair(pk, sk);
-    dbg_chk(CRYPTO_ALGNAME ".pk", pk, CRYPTO_PUBLICKEYBYTES);
-    dbg_chk(CRYPTO_ALGNAME ".sk", sk, CRYPTO_SECRETKEYBYTES);
+    crypto_sign_keypair(pkA, skA, 0);
+    dbg_chk(CRYPTO_ALGNAME ".pk", pkA, CRYPTO_PUBLICKEYBYTES);
+    dbg_chk(CRYPTO_ALGNAME ".sk", skA, CRYPTO_SECRETKEYBYTES);
 
-    //  === sign ===
-    smlen = 0;
-    crypto_sign(sm, &smlen, msg, mlen, sk);
-    dbg_chk(CRYPTO_ALGNAME ".sm", sm, (size_t) smlen);
+    printf("closest v %d\n", closest_v(1, 1));
 
-    //  === verify ===
-    mlen2 = 0;
-    memset(m2, 0, sizeof(m2));
-    fail += crypto_sign_open(m2, &mlen2, sm, smlen, pk) == 0 ? 0 : 1;
-    fail += (mlen == mlen2 && memcmp(msg, m2, mlen) == 0) ? 0 : 1;
+    // test recover
+    int v1 = 59000;
+    int v2 = 60800;
 
-    sm[123]++;  //  corrupt it -- expect fail
-    fail += crypto_sign_open(m2, &mlen2, sm, smlen, pk) != 0 ? 0 : 1;
+    int c = (((1 << SPARROW_B) * v1) / SPARROW_Q) & 1;
+    int w1 = rec_element(v1, c);
+    int w2 = rec_element(v2, c);
+    printf("%d vs %d\n", w1, w2);
 
-    printf("verify fail= %d\n", fail);
+    // test recover
+    int test = 0;
+    for (int i = 0; i < 1000; i++) {
+        crypto_sign_keypair(pkA, skA, 0);
+        crypto_sign_keypair(pkB, skB, 1);
+
+        crypto_encaps(K, ct, pkA, skB);
+        crypto_decaps(K_, ct, pkB, skA);
+
+        int ok = 1;
+        for (int j = 0; j < CRYPTO_SHAREDKEY; j++)
+        {
+            ok &= (K[j] == K_[j]);
+        }
+
+        test += 1 - ok;
+    }
+    printf("nb encaps not ok: %d\n", test);
 
 #ifdef BENCH_TIMEOUT
     to = BENCH_TIMEOUT;
@@ -129,6 +134,42 @@ int main()
 
     printf("=== Bench ===\n");
 
+    int64_t y[SPARROW_N * SPARROW_K];
+    iter = 16;
+    do
+    {
+        iter *= 2;
+        ts = cpu_clock_secs();
+        cc = plat_get_cycle();
+
+        for (i = 0; i < iter; i++)
+        {
+            small_sample_gauss_vector(y, SPARROW_N * SPARROW_K);
+        }
+        cc = plat_get_cycle() - cc;
+        ts = cpu_clock_secs() - ts;
+    } while (ts < to);
+    printf("%s\tSmallSampleGauss() %5zu:\t%8.3f ms\t%8.3f Mcyc\n", CRYPTO_ALGNAME, iter,
+           1000.0 * ts / ((double)iter), 1E-6 * ((double)(cc / iter)));
+
+
+    iter = 16;
+    do
+    {
+        iter *= 2;
+        ts = cpu_clock_secs();
+        cc = plat_get_cycle();
+
+        for (i = 0; i < iter; i++)
+        {
+            large_sample_gauss_vector(y, SPARROW_CTBITS);
+        }
+        cc = plat_get_cycle() - cc;
+        ts = cpu_clock_secs() - ts;
+    } while (ts < to);
+    printf("%s\tLargeSampleGauss() %5zu:\t%8.3f ms\t%8.3f Mcyc\n", CRYPTO_ALGNAME, iter,
+           1000.0 * ts / ((double)iter), 1E-6 * ((double)(cc / iter)));
+
     iter = 16;
     do {
         iter *= 2;
@@ -136,7 +177,7 @@ int main()
         cc = plat_get_cycle();
 
         for (i = 0; i < iter; i++) {
-            crypto_sign_keypair(pk, sk);
+            crypto_sign_keypair(pkA, skA, 0);
         }
         cc = plat_get_cycle() - cc;
         ts = cpu_clock_secs() - ts;
@@ -145,38 +186,46 @@ int main()
            1000.0 * ts / ((double)iter), 1E-6 * ((double) (cc / iter)));
 
     iter = 16;
-    do {
+    do
+    {
         iter *= 2;
-        crypto_sign_keypair(pk, sk);
+
+        crypto_sign_keypair(pkA, skA, 0);
+        crypto_sign_keypair(pkB, skB, 1);
+
         ts = cpu_clock_secs();
         cc = plat_get_cycle();
 
-        for (i = 0; i < iter; i++) {
-            crypto_sign(sm, &smlen, msg, mlen, sk);
+        for (i = 0; i < iter; i++)
+        {
+            crypto_encaps(K, ct, pkA, skB);
         }
         cc = plat_get_cycle() - cc;
         ts = cpu_clock_secs() - ts;
     } while (ts < to);
-    printf("%s\t  Sign() %5zu:\t%8.3f ms\t%8.3f Mcyc\n", CRYPTO_ALGNAME, iter,
-           1000.0 * ts / ((double)iter), 1E-6 * ((double) (cc / iter)));
+    printf("%s\t  Encaps() %5zu:\t%8.3f ms\t%8.3f Mcyc\n", CRYPTO_ALGNAME, iter,
+           1000.0 * ts / ((double)iter), 1E-6 * ((double)(cc / iter)));
 
     iter = 16;
-    do {
+    do
+    {
         iter *= 2;
-        crypto_sign_keypair(pk, sk);
-        crypto_sign(sm, &smlen, msg, mlen, sk);
+
+        crypto_sign_keypair(pkA, skA, 0);
+        crypto_sign_keypair(pkB, skB, 1);
+
         ts = cpu_clock_secs();
         cc = plat_get_cycle();
 
-        //  repeats the same verify..
-        for (i = 0; i < iter; i++) {
-            fail += crypto_sign_open(m2, &mlen2, sm, smlen, pk) == 0 ? 0 : 1;
+        for (i = 0; i < iter; i++)
+        {
+            crypto_decaps(K, ct, pkB, skA);
         }
         cc = plat_get_cycle() - cc;
         ts = cpu_clock_secs() - ts;
     } while (ts < to);
-    printf("%s\tVerify() %5zu:\t%8.3f ms\t%8.3f Mcyc\n", CRYPTO_ALGNAME, iter,
-           1000.0 * ts / ((double)iter), 1E-6 * ((double) (cc / iter)));
+    printf("%s\t  Decaps() %5zu:\t%8.3f ms\t%8.3f Mcyc\n", CRYPTO_ALGNAME, iter,
+           1000.0 * ts / ((double)iter), 1E-6 * ((double)(cc / iter)));
 
     return 0;
 }

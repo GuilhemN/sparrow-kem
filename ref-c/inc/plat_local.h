@@ -1,5 +1,5 @@
 //  plat_local.h
-//  Copyright (c) 2023 Raccoon Signature Team. See LICENSE.
+//  Copyright (c) 2024 Sparrow KEM Team. See LICENSE.
 
 //  === Localization affecting all implementations can be inserted here.
 

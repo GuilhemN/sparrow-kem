@@ -1,5 +1,5 @@
 //  polyr.c
-//  Copyright (c) 2023 Raccoon Signature Team. See LICENSE.
+//  Copyright (c) 2024 Sparrow KEM Team. See LICENSE.
 
 //  === Polynomial arithmetic related to the ring Zq[x]/(x^n+1).
 
@@ -17,7 +17,7 @@ void polyr_zero(int64_t *r)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         r[i] = 0;
     }
 }
@@ -28,7 +28,7 @@ void polyr_copy(int64_t *r, const int64_t *a)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         r[i] = a[i];
     }
 }
@@ -39,7 +39,7 @@ void polyr_add(int64_t *r, const int64_t *a, const int64_t *b)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         r[i] = mont64_add(a[i], b[i]);
     }
 }
@@ -50,7 +50,7 @@ void polyr_sub(int64_t *r, const int64_t *a, const int64_t *b)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         r[i] = mont64_sub(a[i], b[i]);
     }
 }
@@ -61,8 +61,8 @@ void polyr_addq(int64_t *r, const int64_t *a, const int64_t *b)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
-        r[i] = mont64_csub(a[i] + b[i], RACC_Q);
+    for (i = 0; i < SPARROW_N; i++) {
+        r[i] = mont64_csub(a[i] + b[i], SPARROW_Q);
     }
 }
 #ifndef POLYR_Q32
@@ -78,8 +78,8 @@ void polyr_subq(int64_t *r, const int64_t *a, const int64_t *b)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
-        r[i] = mont64_cadd(a[i] - b[i], RACC_Q);
+    for (i = 0; i < SPARROW_N; i++) {
+        r[i] = mont64_cadd(a[i] - b[i], SPARROW_Q);
     }
 }
 
@@ -96,7 +96,7 @@ void polyr_addm(int64_t *r, const int64_t *a, const int64_t *b, int64_t m)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         r[i] = mont64_csub(a[i] + b[i], m);
     }
 }
@@ -107,7 +107,7 @@ void polyr_subm(int64_t *r, const int64_t *a, const int64_t *b, int64_t m)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         r[i] = mont64_cadd(a[i] - b[i], m);
     }
 }
@@ -118,7 +118,7 @@ void polyr_negm(int64_t *r, int64_t *a, int64_t m)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         r[i] = mont64_cadd(-a[i], m);
     }
 }
@@ -129,7 +129,7 @@ void polyr_shlm(int64_t *r, const int64_t *a, size_t sh, int64_t m)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         r[i] = mont64_csub(a[i] << sh, m);
     }
 }
@@ -140,7 +140,7 @@ void polyr_shrm(int64_t *r, const int64_t *a, size_t sh, int64_t m)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         r[i] = mont64_csub(a[i] >> sh, m);
     }
 }
@@ -151,7 +151,7 @@ void polyr_round(int64_t *r, const int64_t *a, size_t sh, int64_t h, int64_t m)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         r[i] = mont64_csub((a[i] + h) >> sh, m);
     }
 }
@@ -164,7 +164,7 @@ void polyr_center(int64_t *r, const int64_t *a, int64_t m)
     int64_t x, c;
 
     c = m >> 1;
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         x = mont64_add(a[i], c);
         x = mont64_csub(x, m);
         r[i] = mont64_sub(x, c);
@@ -177,7 +177,7 @@ void polyr_nonneg(int64_t *r, const int64_t *a, int64_t m)
 {
     size_t i;
 
-    for (i = 0; i < RACC_N; i++) {
+    for (i = 0; i < SPARROW_N; i++) {
         r[i] = mont64_cadd(a[i], m);
     }
 }

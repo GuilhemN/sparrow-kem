@@ -1,5 +1,5 @@
 //  sha3_t.c
-//  Copyright (c) 2023 Raccoon Signature Team. See LICENSE.
+//  Copyright (c) 2024 Sparrow KEM Team. See LICENSE.
 
 //  === Common wrappers for  SHA3 (FIPS 202) functionality.
 

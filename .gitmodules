@@ -1,0 +1,3 @@
+[submodule "security/estimator"]
+	path = security/estimator
+	url = git@github.com:malb/lattice-estimator.git

@@ -7,8 +7,6 @@ CFLAGS	+=	-Wall -Wextra -Ofast -march=native -fstack-usage
 #	slower instrumentation flags
 #CFLAGS	=	-Wall -Wextra -Wshadow -fsanitize=address,undefined -O2 -g 
 #	options
-#CFLAGS	+=	-DPOLYR_Q32
-#CFLAGS	+=	-DMASK_RANDOM_ASCON
 CSRC	+= 	$(wildcard *.c util/*.c)
 OBJS	= 	$(CSRC:.c=.o)
 SUFILES	= 	$(CSRC:.c=.su)

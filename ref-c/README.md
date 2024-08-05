@@ -1,7 +1,5 @@
-#	raccoon/ref-c
+#	sparrow/ref-c
 
-Copyright (c) 2023 Raccoon Signature Team. See LICENSE.    
-*(Original code was written by Markku-Juhani O. Saarinen.)*
-
-"ANSI C" Reference Implementation of Masked Raccoon for NIST API testing.
+Copyright (c) 2023 Sparrow KEM Team. See LICENSE.    
+*(Based on code from Raccoon, originally written by Markku-Juhani O. Saarinen.)*
 
